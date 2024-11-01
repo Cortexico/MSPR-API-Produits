@@ -66,7 +66,7 @@ async def update_product(id: str, product: ProductUpdate):
         print("Erreur de validation :", e.json())
         raise HTTPException(status_code=422, detail="Erreur de validation des champs")
 
-    raise HTTPException(status_code=404, detail=
+    raise HTTPException(status_code=404, detail="Produit non trouvé")
 
 # DELETE /products/{id}
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
