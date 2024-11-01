@@ -6,25 +6,23 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app import database
 
-# Configuration pour les tests
-os.environ["MONGO_USER"] = "products"
-os.environ["MONGO_PASSWORD"] = "apiProducts"
-os.environ["MONGO_HOST"] = "localhost"
-os.environ["MONGO_PORT"] = "27017"
-os.environ["MONGO_DB"] = "products_db"
-
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for each test case."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
     yield loop
-    loop.close()
-
+    # Au lieu de fermer la boucle, on la nettoie
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.run_until_complete(loop.shutdown_default_executor())
+    
 @pytest.fixture(scope="function")
 async def mock_mongo():
     """Create a mock MongoDB client and replace the real one."""
+    # Création du client mock avec les credentials
     client = AsyncMongoMockClient()
-    db = client[os.environ["MONGO_DB"]]
+    db = client[os.environ.get("MONGO_DB", "products_db")]
+    
     # Sauvegarder les références originales
     orig_client = database.client
     orig_database = database.database
@@ -35,7 +33,12 @@ async def mock_mongo():
     database.database = db
     database.product_collection = db.get_collection("products")
     
+    await database.client.start_session()  # Démarrer une session
+    
     yield database.product_collection
+    
+    # Nettoyage
+    await database.client.close()
     
     # Restaurer les références originales
     database.client = orig_client
@@ -43,6 +46,7 @@ async def mock_mongo():
     database.product_collection = orig_collection
 
 @pytest.fixture
-def test_client(mock_mongo):
+def test_client():
+    """Create a test client."""
     with TestClient(app) as client:
         yield client
