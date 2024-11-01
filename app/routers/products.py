@@ -4,6 +4,7 @@ from bson import ObjectId
 from app.schemas import ProductCreate, ProductUpdate, ProductResponse
 from app.database import product_collection
 from app.models import product_helper
+from pydantic import ValidationError
 
 router = APIRouter(
     prefix="/products",
@@ -48,20 +49,24 @@ async def update_product(id: str, product: ProductUpdate):
 
     # Exclure les champs non fournis dans la requête
     update_data = product.dict(exclude_unset=True)
-    if update_data:
-        result = await product_collection.update_one(
-            {"_id": ObjectId(id)}, {"$set": update_data}
-        )
-        if result.modified_count == 1:
-            updated_product = await product_collection.find_one({"_id": ObjectId(id)})
-            if updated_product:
-                return product_helper(updated_product)
-    
-    existing_product = await product_collection.find_one({"_id": ObjectId(id)})
-    if existing_product:
-        return product_helper(existing_product)
-    
-    raise HTTPException(status_code=404, detail="Produit non trouvé")
+    try:
+        if update_data:
+            result = await product_collection.update_one(
+                {"_id": ObjectId(id)}, {"$set": update_data}
+            )
+            if result.modified_count == 1:
+                updated_product = await product_collection.find_one({"_id": ObjectId(id)})
+                if updated_product:
+                    return product_helper(updated_product)
+
+        existing_product = await product_collection.find_one({"_id": ObjectId(id)})
+        if existing_product:
+            return product_helper(existing_product)
+    except ValidationError as e:
+        print("Erreur de validation :", e.json())
+        raise HTTPException(status_code=422, detail="Erreur de validation des champs")
+
+    raise HTTPException(status_code=404, detail=
 
 # DELETE /products/{id}
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
