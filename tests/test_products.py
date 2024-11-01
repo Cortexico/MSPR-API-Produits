@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 @pytest.mark.asyncio
-async def test_create_product(test_client, mock_mongo):
+async def test_create_product(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",
@@ -18,7 +18,7 @@ async def test_create_product(test_client, mock_mongo):
     assert data["stock"] == product_data["stock"]
 
 @pytest.mark.asyncio
-async def test_get_products(test_client, mock_mongo):
+async def test_get_products(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",
@@ -34,7 +34,7 @@ async def test_get_products(test_client, mock_mongo):
     assert data[0]["name"] == product_data["name"]
 
 @pytest.mark.asyncio
-async def test_get_product(test_client, mock_mongo):
+async def test_get_product(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",
@@ -50,7 +50,7 @@ async def test_get_product(test_client, mock_mongo):
     assert data["name"] == product_data["name"]
 
 @pytest.mark.asyncio
-async def test_update_product(test_client, mock_mongo):
+async def test_update_product(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",
@@ -71,7 +71,7 @@ async def test_update_product(test_client, mock_mongo):
     assert data["price"] == update_data["price"]
 
 @pytest.mark.asyncio
-async def test_delete_product(test_client, mock_mongo):
+async def test_delete_product(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",

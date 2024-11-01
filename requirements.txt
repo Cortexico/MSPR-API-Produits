@@ -5,6 +5,5 @@ pydantic
 python-dotenv
 aio_pika
 pytest-asyncio
-mongomock-motor
 pytest
 httpx
