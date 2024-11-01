@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     services:
       mongodb:
         image: mongo:4.4
@@ -28,30 +28,47 @@ jobs:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: adminpassword
       MONGO_DB: products_db
+      MONGO_USER: products
+      MONGO_PASSWORD: apiProducts
+      MONGO_HOST: localhost
+      MONGO_PORT: 27017
       PYTHONPATH: ${{ github.workspace }}
 
     steps:
     - uses: actions/checkout@v3
-
+    
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest-asyncio httpx asgi-lifespan
 
-    - name: Initialize MongoDB User
+    - name: Install MongoDB Client
       run: |
-        mongo "mongodb://admin:adminpassword@localhost:27017/admin" /mnt/data/init.js
+        wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+        echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+        sudo apt-get update
+        sudo apt-get install -y mongodb-org-shell
+
+    - name: Setup MongoDB User
+      run: |
+        mongo "mongodb://admin:adminpassword@localhost:27017/admin" --eval '
+          db.getSiblingDB("products_db").createUser({
+            user: "products",
+            pwd: "apiProducts",
+            roles: [{ role: "readWrite", db: "products_db" }]
+          });
+        '
     
     - name: Run tests
       run: |
         pytest -v
-
+    
     - name: Lint code
       run: |
         pip install flake8
