@@ -6,9 +6,16 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app import database
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the entire session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="session")
 async def mongo_client():
-    """Create a real MongoDB client for testing."""
+    """Create a MongoDB client for the testing session."""
     client = AsyncIOMotorClient("mongodb://admin:adminpassword@localhost:27017")
     db = client[os.environ.get("MONGO_DB", "products_db")]
     
@@ -24,9 +31,6 @@ async def mongo_client():
     
     yield database.product_collection
     
-    # Cleanup
-    await client.close()  # Using await to ensure async close
-    
     # Restore original references
     database.client = orig_client
     database.database = orig_database
@@ -34,6 +38,6 @@ async def mongo_client():
 
 @pytest.fixture(scope="function")
 def test_client():
-    """Create a test client using LifespanManager to manage app lifespan."""
+    """Create a test client using FastAPI's TestClient."""
     with TestClient(app) as client:
         yield client
