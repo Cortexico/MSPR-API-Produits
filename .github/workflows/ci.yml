@@ -63,18 +63,6 @@ jobs:
         pip install -r requirements.txt
         pip install pytest-asyncio
         pip install mongomock-motor
-    
-    - name: Wait for services to be healthy
-      run: |
-        until [ "$(docker inspect --format='{{json .State.Health.Status}}' $(docker-compose ps -q mongodb))" == "\"healthy\"" ]; do
-          echo "Waiting for MongoDB to be healthy..."
-          sleep 2
-        done
-        until [ "$(docker inspect --format='{{json .State.Health.Status}}' $(docker-compose ps -q rabbitmq))" == "\"healthy\"" ]; do
-          echo "Waiting for RabbitMQ to be healthy..."
-          sleep 2
-        done
-    
     - name: Run tests
       env:
         PYTHONPATH: ${{ github.workspace }}
