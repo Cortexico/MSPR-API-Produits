@@ -6,14 +6,14 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app import database
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for each test case."""
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
-    yield loop
-    loop.run_until_complete(loop.shutdown_asyncgens())
-    loop.run_until_complete(loop.shutdown_default_executor())
+# @pytest.fixture(scope="session")
+# def event_loop():
+#     """Create an instance of the default event loop for each test case."""
+#     policy = asyncio.get_event_loop_policy()
+#     loop = policy.new_event_loop()
+#     yield loop
+#     loop.run_until_complete(loop.shutdown_asyncgens())
+#     loop.run_until_complete(loop.shutdown_default_executor())
     
 @pytest.fixture(scope="function")
 async def mongo_client():
@@ -34,7 +34,7 @@ async def mongo_client():
     yield database.product_collection
     
     # Cleanup
-    await client.close()
+    client.close()
     
     # Restore original references
     database.client = orig_client
