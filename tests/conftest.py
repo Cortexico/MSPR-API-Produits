@@ -1,21 +1,13 @@
 import os
 import pytest
-import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.testclient import TestClient
 from app.main import app
 from app import database
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the entire session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def mongo_client():
-    """Create a MongoDB client for the testing session."""
+    """Create a MongoDB client for each test to prevent connection issues."""
     client = AsyncIOMotorClient("mongodb://admin:adminpassword@localhost:27017")
     db = client[os.environ.get("MONGO_DB", "products_db")]
     
@@ -35,6 +27,9 @@ async def mongo_client():
     database.client = orig_client
     database.database = orig_database
     database.product_collection = orig_collection
+    
+    # Close the client connection explicitly after yield
+    client.close()
 
 @pytest.fixture(scope="function")
 def test_client():
