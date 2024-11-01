@@ -46,25 +46,28 @@ async def create_product(product: ProductCreate):
 async def update_product(id: str, product: ProductUpdate):
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="ID de produit invalide")
-
-    # Exclure les champs non fournis dans la requête
-    update_data = product.dict(exclude_unset=True)
+    
+    # Extraire uniquement les champs fournis pour la mise à jour
     try:
-        if update_data:
-            result = await product_collection.update_one(
-                {"_id": ObjectId(id)}, {"$set": update_data}
-            )
-            if result.modified_count == 1:
-                updated_product = await product_collection.find_one({"_id": ObjectId(id)})
-                if updated_product:
-                    return product_helper(updated_product)
-
-        existing_product = await product_collection.find_one({"_id": ObjectId(id)})
-        if existing_product:
-            return product_helper(existing_product)
+        update_data = product.dict(exclude_unset=True)
     except ValidationError as e:
-        print("Erreur de validation :", e.json())
-        raise HTTPException(status_code=422, detail="Erreur de validation des champs")
+        raise HTTPException(status_code=422, detail=f"Erreur de validation des champs: {e.errors()}")
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucun champ valide fourni pour la mise à jour")
+
+    result = await product_collection.update_one(
+        {"_id": ObjectId(id)}, {"$set": update_data}
+    )
+
+    if result.modified_count == 1:
+        updated_product = await product_collection.find_one({"_id": ObjectId(id)})
+        if updated_product:
+            return product_helper(updated_product)
+    
+    existing_product = await product_collection.find_one({"_id": ObjectId(id)})
+    if existing_product:
+        return product_helper(existing_product)
 
     raise HTTPException(status_code=404, detail="Produit non trouvé")
 
