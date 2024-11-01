@@ -13,8 +13,10 @@ MONGO_DB = os.getenv("MONGO_DB")
 
 # Construire la chaîne de connexion
 MONGO_DETAILS = (
-    f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}"
+    f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:"
+    f"{MONGO_PORT}/{MONGO_DB}"
 )
+
 
 # Créer le client MongoDB asynchrone
 client = AsyncIOMotorClient(MONGO_DETAILS)
