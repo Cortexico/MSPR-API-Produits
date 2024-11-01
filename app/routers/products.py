@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from fastapi import Depends
 from typing import List
 from bson import ObjectId
-from app.schemas import ProductBase, ProductCreate, ProductUpdate, ProductResponse
+from app.schemas import ProductCreate, ProductUpdate, ProductResponse
 from app.database import product_collection
 from app.models import product_helper
 
@@ -26,6 +25,8 @@ async def get_products():
 # GET /products/{id}
 @router.get("/{id}", response_model=ProductResponse)
 async def get_product(id: str):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="ID de produit invalide")
     product = await product_collection.find_one({"_id": ObjectId(id)})
     if product:
         return product_helper(product)
@@ -42,8 +43,12 @@ async def create_product(product: ProductCreate):
 # PUT /products/{id}
 @router.put("/{id}", response_model=ProductResponse)
 async def update_product(id: str, product: ProductUpdate):
-    update_data = {k: v for k, v in product.dict().items() if v is not None}
-    if len(update_data) >= 1:
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="ID de produit invalide")
+
+    # Exclure les champs non fournis dans la requête
+    update_data = product.dict(exclude_unset=True)
+    if update_data:
         result = await product_collection.update_one(
             {"_id": ObjectId(id)}, {"$set": update_data}
         )
@@ -51,15 +56,21 @@ async def update_product(id: str, product: ProductUpdate):
             updated_product = await product_collection.find_one({"_id": ObjectId(id)})
             if updated_product:
                 return product_helper(updated_product)
+    
     existing_product = await product_collection.find_one({"_id": ObjectId(id)})
     if existing_product:
         return product_helper(existing_product)
+    
     raise HTTPException(status_code=404, detail="Produit non trouvé")
 
 # DELETE /products/{id}
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(id: str):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="ID de produit invalide")
+        
     result = await product_collection.delete_one({"_id": ObjectId(id)})
     if result.deleted_count == 1:
         return
+    
     raise HTTPException(status_code=404, detail="Produit non trouvé")
