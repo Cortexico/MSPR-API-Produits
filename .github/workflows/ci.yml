@@ -65,9 +65,20 @@ jobs:
           });
         '
     
-    - name: Run tests
-      run: |
-        pytest -v
+    - name: Run test_create_product.py
+      run: pytest -v tests/test_create_product.py
+
+    - name: Run test_get_products.py
+      run: pytest -v tests/test_get_products.py
+
+    - name: Run test_get_product.py
+      run: pytest -v tests/test_get_product.py
+
+    - name: Run test_update_product.py
+      run: pytest -v tests/test_update_product.py
+
+    - name: Run test_delete_product.py
+      run: pytest -v tests/test_delete_product.py
     
     - name: Lint code
       run: |
