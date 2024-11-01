@@ -52,7 +52,6 @@ async def create_product(product: ProductCreate):
     return product_helper(created_product)
 
 
-
 # PUT /products/{id}
 @router.put("/{id}", response_model=ProductResponse)
 async def update_product(id: str, product: ProductUpdate):
@@ -96,5 +95,5 @@ async def delete_product(id: str):
         raise HTTPException(status_code=400, detail="ID de produit invalide")
     result = await product_collection.delete_one({"_id": ObjectId(id)})
     if result.deleted_count == 1:
-        return    
+        return
     raise HTTPException(status_code=404, detail="Produit non trouvé")
