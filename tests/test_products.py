@@ -1,5 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
 
 @pytest.mark.asyncio
 async def test_create_product(test_client, mongo_client):
