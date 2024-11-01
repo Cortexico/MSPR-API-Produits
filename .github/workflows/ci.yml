@@ -20,7 +20,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"
+          --health-cmd "mongo --eval 'db.adminCommand(\"ping\").ok' --quiet"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -64,13 +64,21 @@ jobs:
         pip install pytest-asyncio
         pip install mongomock-motor
     
+    - name: Wait for services to be healthy
+      run: |
+        until [ "$(docker inspect --format='{{json .State.Health.Status}}' $(docker-compose ps -q mongodb))" == "\"healthy\"" ]; do
+          echo "Waiting for MongoDB to be healthy..."
+          sleep 2
+        done
+        until [ "$(docker inspect --format='{{json .State.Health.Status}}' $(docker-compose ps -q rabbitmq))" == "\"healthy\"" ]; do
+          echo "Waiting for RabbitMQ to be healthy..."
+          sleep 2
+        done
+    
     - name: Run tests
       env:
         PYTHONPATH: ${{ github.workspace }}
-      run: |
-        echo "Waiting for MongoDB and RabbitMQ to be ready..."
-        sleep 15
-        pytest
+      run: pytest
     
     - name: Lint code
       run: |
