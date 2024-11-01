@@ -24,7 +24,7 @@ async def mongo_client():
     yield database.product_collection
 
     # Cleanup
-    await client.close()
+    client.close()
 
     # Restore original references
     database.client = orig_client
