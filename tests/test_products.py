@@ -6,7 +6,7 @@ def test_create_product(test_client):
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
-        "quantity": 100
+        "stock": 100
     }
     response = test_client.post("/products/", json=product_data)
     assert response.status_code == 201
@@ -14,7 +14,7 @@ def test_create_product(test_client):
     assert data["name"] == product_data["name"]
     assert data["description"] == product_data["description"]
     assert data["price"] == product_data["price"]
-    assert data["quantity"] == product_data["quantity"]
+    assert data["stock"] == product_data["stock"]
 
 def test_get_products(test_client):
     # Créer un produit de test
@@ -22,7 +22,7 @@ def test_get_products(test_client):
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
-        "quantity": 100
+        "stock": 100
     }
     test_client.post("/products/", json=product_data)
     
@@ -39,7 +39,7 @@ def test_get_product(test_client):
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
-        "quantity": 100
+        "stock": 100
     }
     create_response = test_client.post("/products/", json=product_data)
     product_id = create_response.json()["id"]
@@ -56,7 +56,7 @@ def test_update_product(test_client):
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
-        "quantity": 100
+        "stock": 100
     }
     create_response = test_client.post("/products/", json=product_data)
     product_id = create_response.json()["id"]
@@ -78,7 +78,7 @@ def test_delete_product(test_client):
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
-        "quantity": 100
+        "stock": 100
     }
     create_response = test_client.post("/products/", json=product_data)
     product_id = create_response.json()["id"]
