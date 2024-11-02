@@ -1,53 +1,16 @@
-## **API Produits**
+### API Produits - Documentation
 
-### **Description**
+#### Contexte
+L'API Produits gère les informations relatives aux produits et permet leur création, modification, et suppression. Elle est conçue pour interagir avec les API Clients et Commandes pour obtenir ou transmettre des informations produit et utilise RabbitMQ pour une communication asynchrone entre services.
 
-Cette API gère les informations des produits. Elle permet de créer, lire, mettre à jour et supprimer des produits dans la base de données MongoDB.
-
-### **Prérequis**
-
+#### Prérequis
 - **Python 3.9+**
-- **Virtualenv** (optionnel mais recommandé)
-- **Docker et Docker Compose** (si vous souhaitez utiliser Docker)
-- **Fichier `.env`** contenant les variables d'environnement (fourni séparément)
+- **Docker** et **Docker Compose** installés
+- **RabbitMQ** en cours d'exécution avec le réseau Docker partagé `backend` (se référer à la [documentation](https://github.com/Cortexico/MSPR-RabbitMQ))
+- **MongoDB** comme base de données, avec un fichier d'initialisation `init.js` pour créer un utilisateur et une base de données spécifique (`products_db`)
+- Fichier `.env` correctement configuré avec les variables suivantes :
 
-### **Installation**
-
-#### **1. Cloner le Repository**
-
-```bash
-git clone https://github.com/Cortexico/MSPR-API-Produits.git
-cd API_produits
-```
-
-#### **2. Créer un Environnement Virtuel**
-
-- **Sur Windows :**
-
-  ```bash
-  python -m venv venv
-  venv\Scripts\activate
-  ```
-
-- **Sur macOS/Linux :**
-
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-
-#### **3. Installer les Dépendances**
-
-```bash
-pip install -r requirements.txt
-```
-
-#### **4. Configurer les Variables d'Environnement**
-
-Assurez-vous que le fichier `.env` est présent à la racine du projet avec les variables suivantes :
-
-```
-# Variables pour MongoDB
+```plaintext
 MONGO_INITDB_ROOT_USERNAME=admin
 MONGO_INITDB_ROOT_PASSWORD=adminpassword
 MONGO_DB=products_db
@@ -56,73 +19,150 @@ MONGO_PASSWORD=apiProducts
 MONGO_HOST=db
 MONGO_PORT=27017
 
-# Variables pour l'API
 API_HOST=0.0.0.0
 API_PORT=8001
 
-# Variables pour RabbitMQ
 RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
 ```
 
-### **Lancement de l'API**
+#### Instructions de démarrage
 
-#### **Avec Docker Compose (Recommandé)**
+#### **1. Cloner le dépôt de l'API Produits** :
+   ```bash
+   git clone https://github.com/Cortexico/MSPR-API-Produits.git
+   ```
+#### **2. Créer le réseau Docker partagé** (si non existant) :
+   ```bash
+   docker network create backend
+   ```
+#### **3. Créer un Environnement Virtuel**
 
-```bash
-docker-compose up --build
-```
+Il est recommandé d'utiliser un environnement virtuel pour isoler les dépendances.
 
-- Cette commande va construire les images Docker et lancer les services définis dans `docker-compose.yml`, y compris MongoDB et RabbitMQ.
+- **Sur Windows :**
+  Création de l'environnement virtuel:
+   ```bash
+   python -m venv venv
+   ```
+  
+  Lancement de l'environnement virtuel: 
+   ```bash
+   venv\Scripts\activate
+   ```
 
+- **Sur macOS/Linux :**
+
+   Création de l'environnement virtuel:
+   ```bash
+   python3 -m venv venv
+   ```
+   
+   Lancement de l'environnement virtuel:
+   ```bash
+   source venv\Scripts\activate
+   ```
+
+#### **4. Installer les dépendances** :
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+#### **5. Lancer l’API avec Docker Compose** :
+   ```bash
+   docker-compose up --build
+   ```
+#### **6. Pour arrêter et supprimer les volumes Docker** (si nécessaire) :
+   ```bash
+   docker-compose down -v
+   ```
 #### **Sans Docker**
 
-**1. Lancer la Base de Données MongoDB**
+#### **1. Initialiser MongoDB en local**:
+   
+   Lancer le serveur MongoDB avec le fichier d'initialisation `init.js` pour créer l'utilisateur et configurer la base de données `products_db` :
+   ```bash
+   mongo --port 27017 < mongo-init/init.js
+   ```
+#### **2. Lancer l'API**
 
-- Assurez-vous que MongoDB est installé et en cours d'exécution.
-- Créez un utilisateur et une base de données correspondant aux variables d'environnement.
+   ```bash
+   uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
+   ```
 
-**2. Lancer l'API**
+#### Documentation technique de l'API
 
-```bash
-uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
-```
+##### Endpoints principaux
+- **GET /products** : Récupère la liste des produits.
+  - **Réponse** : JSON array contenant les informations de chaque produit.
+  
+- **POST /products** : Crée un nouveau produit.
+  - **Corps** : JSON contenant `name`, `description`, `price`, et `stock`.
+  - **Réponse** : Confirmation de création avec les détails du produit ajouté.
+  
+- **GET /products/{id}** : Récupère les détails d’un produit spécifique.
+  - **Paramètre** : `id` du produit.
+  - **Réponse** : Détails du produit en JSON.
+  
+- **PUT /products/{id}** : Met à jour les informations d’un produit.
+  - **Corps** : JSON avec les champs à mettre à jour.
+  - **Réponse** : Détails mis à jour du produit.
+  
+- **DELETE /products/{id}** : Supprime un produit.
+  - **Paramètre** : `id` du produit.
+  - **Réponse** : Confirmation de suppression.
 
-### **Accès à la Documentation de l'API**
+##### Services RabbitMQ
+L'API utilise RabbitMQ pour publier et consommer des messages relatifs aux produits.
 
-- Une fois l'API lancée, accédez à la documentation interactive :
+- **Publisher** : Envoie des notifications lors de la création ou modification de produits.
+- **Consumer** : Reçoit des messages des autres API (Clients et Commandes) pour vérifier les informations pertinentes.
 
-  ```
-  http://localhost:8001/docs
-  ```
+#### Notes de sécurité et de debug
+- **Sécurité** : Assurez-vous que le fichier `.env` contient des identifiants forts pour les bases de données et RabbitMQ.
+- **Mode debug** : Utilisez `uvicorn` en mode `--reload` pour un développement plus rapide en local.
+- **Surveillance MongoDB** : Utilisez MongoDB Compass ou un autre client MongoDB pour surveiller la base de données `products_db`.
+
+### Documentation CI/CD - GitHub Actions
+
+#### Contexte
+L'intégration continue et le déploiement continu (CI/CD) sont configurés via GitHub Actions pour automatiser les tests, les vérifications de code et le déploiement de l’API Produits. Cette configuration permet de garantir la qualité du code et de faciliter les déploiements.
+
+#### Configuration GitHub Actions
+Le fichier de workflow GitHub Actions `.github/workflows/ci.yml` définit les étapes principales du pipeline CI/CD :
+
+1. **Déclencheur** : Le workflow est configuré pour s'exécuter sur chaque `push` ou `pull request` vers la branche principale et pour toute nouvelle branche.
+2. **Environnements de test** : Le fichier `ci.yml` installe les dépendances nécessaires, configure les variables d'environnement, et utilise une base de données de test MongoDB pour valider les fonctionnalités.
+
+#### Étapes du Workflow CI/CD
+
+1. **Configurer l'environnement** : 
+   - Le workflow utilise une image de conteneur pour configurer l’environnement Python et MongoDB.
+   - Installe les dépendances listées dans `requirements.txt` et configure MongoDB en utilisant les variables d’environnement définies dans le fichier `.env`.
+
+2. **Lancer les tests unitaires** :
+   - Les tests unitaires sont exécutés via `pytest` pour valider le fonctionnement de chaque endpoint de l’API.
+   - Les tests se trouvent dans le répertoire `tests/`, comprenant :
+     - `test_create_product.py` : Vérifie la création d'un produit.
+     - `test_delete_product.py` : Vérifie la suppression d'un produit.
+     - `test_get_product.py` et `test_get_products.py` : Valident les opérations de récupération de produits.
+     - `test_update_product.py` : Vérifie la mise à jour d'un produit.
+
+3. **Vérifications de code** :
+   - Le workflow utilise `flake8` pour analyser la qualité et le formatage du code.
+   - Tout échec de style ou de format déclenchera un échec de pipeline, ce qui permet de garantir un code propre et cohérent.
+
+4. **Build et Déploiement (optionnel)** :
+   - Si nécessaire, le pipeline peut être étendu pour inclure une étape de build et de déploiement.
+   - Le déploiement peut être automatisé pour une infrastructure de production en ajoutant des étapes spécifiques au déploiement.
+
+#### Variables d'environnement de test
+Le workflow CI/CD configure les variables d'environnement nécessaires pour les tests. Les valeurs par défaut peuvent être modifiées dans le fichier `.env` ou directement dans la configuration GitHub Actions si des valeurs spécifiques sont requises pour l’environnement de test.
+
 
 ## **Notes Importantes pour Toutes les APIs**
-
-### **Activation de l'Environnement Virtuel**
-
-- **Windows :**
-
-  - Pour activer l'environnement virtuel, exécutez :
-
-    ```bash
-    venv\Scripts\activate
-    ```
-
-- **macOS/Linux :**
-
-  - Pour activer l'environnement virtuel, exécutez :
-
-    ```bash
-    source venv/bin/activate
-    ```
-
-- **Désactivation :**
-
-  - Pour désactiver l'environnement virtuel, exécutez :
-
-    ```bash
-    deactivate
-    ```
 
 ### **Fichiers `.env`**
 
@@ -175,3 +215,21 @@ uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
 - **Mises à Jour :**
 
   - Gardez vos dépendances à jour en vérifiant régulièrement le fichier `requirements.txt`.
+
+### Règles d’Hébergement
+
+1. **Gestion de la sécurité avec MongoDB** :
+   - MongoDB nécessite une configuration de sécurité renforcée. Utilisez des réseaux privés ou des pare-feu pour restreindre les accès uniquement aux instances de l’API Produits.
+   - Le fichier `.env` doit être protégé pour que les informations de connexion de MongoDB ne soient jamais exposées. Un gestionnaire de secrets comme HashiCorp Vault ou AWS Secrets Manager est recommandé.
+
+2. **Configuration de MongoDB** :
+   - MongoDB doit être configuré avec des utilisateurs et des rôles limités. Par exemple, l’utilisateur `products` avec des permissions `readWrite` est suffisant pour l’API Produits.
+   - Activez le chiffrement des données pour MongoDB en transit (TLS) et au repos si disponible sur l’hébergement.
+
+3. **Scalabilité** :
+   - MongoDB peut être configuré en mode cluster pour améliorer la disponibilité et la scalabilité. Hébergez MongoDB sur une infrastructure de cloud compatible, comme MongoDB Atlas, pour des solutions de gestion de cluster simplifiées.
+   - Utilisez des conteneurs Docker pour l’API afin de faciliter la scalabilité et l'isolation des ressources.
+
+4. **Surveillance et gestion des erreurs** :
+   - Intégrez des outils de surveillance pour garder un œil sur les performances et les requêtes vers MongoDB, notamment pour éviter les surcharges.
+   - Configurez la journalisation des événements critiques pour analyser les erreurs ou les anomalies dans le comportement de l’API Produits.
