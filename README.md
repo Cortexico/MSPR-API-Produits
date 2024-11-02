@@ -215,3 +215,21 @@ Le workflow CI/CD configure les variables d'environnement nécessaires pour les 
 - **Mises à Jour :**
 
   - Gardez vos dépendances à jour en vérifiant régulièrement le fichier `requirements.txt`.
+
+### Règles d’Hébergement
+
+1. **Gestion de la sécurité avec MongoDB** :
+   - MongoDB nécessite une configuration de sécurité renforcée. Utilisez des réseaux privés ou des pare-feu pour restreindre les accès uniquement aux instances de l’API Produits.
+   - Le fichier `.env` doit être protégé pour que les informations de connexion de MongoDB ne soient jamais exposées. Un gestionnaire de secrets comme HashiCorp Vault ou AWS Secrets Manager est recommandé.
+
+2. **Configuration de MongoDB** :
+   - MongoDB doit être configuré avec des utilisateurs et des rôles limités. Par exemple, l’utilisateur `products` avec des permissions `readWrite` est suffisant pour l’API Produits.
+   - Activez le chiffrement des données pour MongoDB en transit (TLS) et au repos si disponible sur l’hébergement.
+
+3. **Scalabilité** :
+   - MongoDB peut être configuré en mode cluster pour améliorer la disponibilité et la scalabilité. Hébergez MongoDB sur une infrastructure de cloud compatible, comme MongoDB Atlas, pour des solutions de gestion de cluster simplifiées.
+   - Utilisez des conteneurs Docker pour l’API afin de faciliter la scalabilité et l'isolation des ressources.
+
+4. **Surveillance et gestion des erreurs** :
+   - Intégrez des outils de surveillance pour garder un œil sur les performances et les requêtes vers MongoDB, notamment pour éviter les surcharges.
+   - Configurez la journalisation des événements critiques pour analyser les erreurs ou les anomalies dans le comportement de l’API Produits.
