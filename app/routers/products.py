@@ -5,6 +5,8 @@ from app.schemas import ProductCreate, ProductUpdate, ProductResponse
 from app.database import product_collection
 from app.models import product_helper
 from pydantic import ValidationError
+from app.rabbitmq_publisher import send_message_to_rabbitmq
+
 
 router = APIRouter(
     prefix="/products",
@@ -49,7 +51,15 @@ async def create_product(product: ProductCreate):
     created_product = await product_collection.find_one(
         {"_id": result.inserted_id}
     )
-    return product_helper(created_product)
+    product_data = product_helper(created_product)
+
+    # Publier le message sur RabbitMQ
+    await send_message_to_rabbitmq({
+        "action": "create",
+        "data": product_data
+    })
+
+    return product_data
 
 
 # PUT /products/{id}
@@ -57,7 +67,6 @@ async def create_product(product: ProductCreate):
 async def update_product(id: str, product: ProductUpdate):
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="ID de produit invalide")
-    # Extraire uniquement les champs fournis pour la mise à jour
     try:
         update_data = product.dict(exclude_unset=True)
     except ValidationError as e:
@@ -80,13 +89,20 @@ async def update_product(id: str, product: ProductUpdate):
             {"_id": ObjectId(id)}
         )
         if updated_product:
-            return product_helper(updated_product)
+            product_data = product_helper(updated_product)
+
+            # Publier le message sur RabbitMQ
+            await send_message_to_rabbitmq({
+                "action": "update",
+                "data": product_data
+            })
+
+            return product_data
     existing_product = await product_collection.find_one({"_id": ObjectId(id)})
     if existing_product:
         return product_helper(existing_product)
 
     raise HTTPException(status_code=404, detail="Produit non trouvé")
-
 
 # DELETE /products/{id}
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -95,5 +111,10 @@ async def delete_product(id: str):
         raise HTTPException(status_code=400, detail="ID de produit invalide")
     result = await product_collection.delete_one({"_id": ObjectId(id)})
     if result.deleted_count == 1:
+        # Publier le message sur RabbitMQ
+        await send_message_to_rabbitmq({
+            "action": "delete",
+            "data": {"id": id}
+        })
         return
     raise HTTPException(status_code=404, detail="Produit non trouvé")
