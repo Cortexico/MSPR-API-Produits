@@ -125,6 +125,42 @@ L'API utilise RabbitMQ pour publier et consommer des messages relatifs aux produ
 - **Mode debug** : Utilisez `uvicorn` en mode `--reload` pour un développement plus rapide en local.
 - **Surveillance MongoDB** : Utilisez MongoDB Compass ou un autre client MongoDB pour surveiller la base de données `products_db`.
 
+### Documentation CI/CD - GitHub Actions
+
+#### Contexte
+L'intégration continue et le déploiement continu (CI/CD) sont configurés via GitHub Actions pour automatiser les tests, les vérifications de code et le déploiement de l’API Produits. Cette configuration permet de garantir la qualité du code et de faciliter les déploiements.
+
+#### Configuration GitHub Actions
+Le fichier de workflow GitHub Actions `.github/workflows/ci.yml` définit les étapes principales du pipeline CI/CD :
+
+1. **Déclencheur** : Le workflow est configuré pour s'exécuter sur chaque `push` ou `pull request` vers la branche principale et pour toute nouvelle branche.
+2. **Environnements de test** : Le fichier `ci.yml` installe les dépendances nécessaires, configure les variables d'environnement, et utilise une base de données de test MongoDB pour valider les fonctionnalités.
+
+#### Étapes du Workflow CI/CD
+
+1. **Configurer l'environnement** : 
+   - Le workflow utilise une image de conteneur pour configurer l’environnement Python et MongoDB.
+   - Installe les dépendances listées dans `requirements.txt` et configure MongoDB en utilisant les variables d’environnement définies dans le fichier `.env`.
+
+2. **Lancer les tests unitaires** :
+   - Les tests unitaires sont exécutés via `pytest` pour valider le fonctionnement de chaque endpoint de l’API.
+   - Les tests se trouvent dans le répertoire `tests/`, comprenant :
+     - `test_create_product.py` : Vérifie la création d'un produit.
+     - `test_delete_product.py` : Vérifie la suppression d'un produit.
+     - `test_get_product.py` et `test_get_products.py` : Valident les opérations de récupération de produits.
+     - `test_update_product.py` : Vérifie la mise à jour d'un produit.
+
+3. **Vérifications de code** :
+   - Le workflow utilise `flake8` pour analyser la qualité et le formatage du code.
+   - Tout échec de style ou de format déclenchera un échec de pipeline, ce qui permet de garantir un code propre et cohérent.
+
+4. **Build et Déploiement (optionnel)** :
+   - Si nécessaire, le pipeline peut être étendu pour inclure une étape de build et de déploiement.
+   - Le déploiement peut être automatisé pour une infrastructure de production en ajoutant des étapes spécifiques au déploiement.
+
+#### Variables d'environnement de test
+Le workflow CI/CD configure les variables d'environnement nécessaires pour les tests. Les valeurs par défaut peuvent être modifiées dans le fichier `.env` ou directement dans la configuration GitHub Actions si des valeurs spécifiques sont requises pour l’environnement de test.
+
 
 ## **Notes Importantes pour Toutes les APIs**
 
