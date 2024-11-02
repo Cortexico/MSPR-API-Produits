@@ -1,53 +1,16 @@
-## **API Produits**
+### API Produits - Documentation
 
-### **Description**
+#### Contexte
+L'API Produits gère les informations relatives aux produits et permet leur création, modification, et suppression. Elle est conçue pour interagir avec les API Clients et Commandes pour obtenir ou transmettre des informations produit et utilise RabbitMQ pour une communication asynchrone entre services.
 
-Cette API gère les informations des produits. Elle permet de créer, lire, mettre à jour et supprimer des produits dans la base de données MongoDB.
-
-### **Prérequis**
-
+#### Prérequis
 - **Python 3.9+**
-- **Virtualenv** (optionnel mais recommandé)
-- **Docker et Docker Compose** (si vous souhaitez utiliser Docker)
-- **Fichier `.env`** contenant les variables d'environnement (fourni séparément)
+- **Docker** et **Docker Compose** installés
+- **RabbitMQ** en cours d'exécution avec le réseau Docker partagé `backend` (se référer à la [documentation](https://github.com/Cortexico/MSPR-RabbitMQ))
+- **MongoDB** comme base de données, avec un fichier d'initialisation `init.js` pour créer un utilisateur et une base de données spécifique (`products_db`)
+- Fichier `.env` correctement configuré avec les variables suivantes :
 
-### **Installation**
-
-#### **1. Cloner le Repository**
-
-```bash
-git clone https://github.com/Cortexico/MSPR-API-Produits.git
-cd API_produits
-```
-
-#### **2. Créer un Environnement Virtuel**
-
-- **Sur Windows :**
-
-  ```bash
-  python -m venv venv
-  venv\Scripts\activate
-  ```
-
-- **Sur macOS/Linux :**
-
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-
-#### **3. Installer les Dépendances**
-
-```bash
-pip install -r requirements.txt
-```
-
-#### **4. Configurer les Variables d'Environnement**
-
-Assurez-vous que le fichier `.env` est présent à la racine du projet avec les variables suivantes :
-
-```
-# Variables pour MongoDB
+```plaintext
 MONGO_INITDB_ROOT_USERNAME=admin
 MONGO_INITDB_ROOT_PASSWORD=adminpassword
 MONGO_DB=products_db
@@ -56,73 +19,114 @@ MONGO_PASSWORD=apiProducts
 MONGO_HOST=db
 MONGO_PORT=27017
 
-# Variables pour l'API
 API_HOST=0.0.0.0
 API_PORT=8001
 
-# Variables pour RabbitMQ
 RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
 ```
 
-### **Lancement de l'API**
+#### Instructions de démarrage
 
-#### **Avec Docker Compose (Recommandé)**
+#### **1. Cloner le dépôt de l'API Produits** :
+   ```bash
+   git clone https://github.com/Cortexico/MSPR-API-Produits.git
+   ```
+#### **2. Créer le réseau Docker partagé** (si non existant) :
+   ```bash
+   docker network create backend
+   ```
+#### **3. Créer un Environnement Virtuel**
 
-```bash
-docker-compose up --build
-```
+Il est recommandé d'utiliser un environnement virtuel pour isoler les dépendances.
 
-- Cette commande va construire les images Docker et lancer les services définis dans `docker-compose.yml`, y compris MongoDB et RabbitMQ.
+- **Sur Windows :**
+  Création de l'environnement virtuel:
+   ```bash
+   python -m venv venv
+   ```
+  
+  Lancement de l'environnement virtuel: 
+   ```bash
+   venv\Scripts\activate
+   ```
 
+- **Sur macOS/Linux :**
+
+   Création de l'environnement virtuel:
+   ```bash
+   python3 -m venv venv
+   ```
+   
+   Lancement de l'environnement virtuel:
+   ```bash
+   source venv\Scripts\activate
+   ```
+
+#### **4. Installer les dépendances** :
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+#### **5. Lancer l’API avec Docker Compose** :
+   ```bash
+   docker-compose up --build
+   ```
+#### **6. Pour arrêter et supprimer les volumes Docker** (si nécessaire) :
+   ```bash
+   docker-compose down -v
+   ```
 #### **Sans Docker**
 
-**1. Lancer la Base de Données MongoDB**
+#### **1. Initialiser MongoDB en local**:
+   
+   Lancer le serveur MongoDB avec le fichier d'initialisation `init.js` pour créer l'utilisateur et configurer la base de données `products_db` :
+   ```bash
+   mongo --port 27017 < mongo-init/init.js
+   ```
+#### **2. Lancer l'API**
 
-- Assurez-vous que MongoDB est installé et en cours d'exécution.
-- Créez un utilisateur et une base de données correspondant aux variables d'environnement.
+   ```bash
+   uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
+   ```
 
-**2. Lancer l'API**
+#### Documentation technique de l'API
 
-```bash
-uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
-```
+##### Endpoints principaux
+- **GET /products** : Récupère la liste des produits.
+  - **Réponse** : JSON array contenant les informations de chaque produit.
+  
+- **POST /products** : Crée un nouveau produit.
+  - **Corps** : JSON contenant `name`, `description`, `price`, et `stock`.
+  - **Réponse** : Confirmation de création avec les détails du produit ajouté.
+  
+- **GET /products/{id}** : Récupère les détails d’un produit spécifique.
+  - **Paramètre** : `id` du produit.
+  - **Réponse** : Détails du produit en JSON.
+  
+- **PUT /products/{id}** : Met à jour les informations d’un produit.
+  - **Corps** : JSON avec les champs à mettre à jour.
+  - **Réponse** : Détails mis à jour du produit.
+  
+- **DELETE /products/{id}** : Supprime un produit.
+  - **Paramètre** : `id` du produit.
+  - **Réponse** : Confirmation de suppression.
 
-### **Accès à la Documentation de l'API**
+##### Services RabbitMQ
+L'API utilise RabbitMQ pour publier et consommer des messages relatifs aux produits.
 
-- Une fois l'API lancée, accédez à la documentation interactive :
+- **Publisher** : Envoie des notifications lors de la création ou modification de produits.
+- **Consumer** : Reçoit des messages des autres API (Clients et Commandes) pour vérifier les informations pertinentes.
 
-  ```
-  http://localhost:8001/docs
-  ```
+#### Notes de sécurité et de debug
+- **Sécurité** : Assurez-vous que le fichier `.env` contient des identifiants forts pour les bases de données et RabbitMQ.
+- **Mode debug** : Utilisez `uvicorn` en mode `--reload` pour un développement plus rapide en local.
+- **Surveillance MongoDB** : Utilisez MongoDB Compass ou un autre client MongoDB pour surveiller la base de données `products_db`.
+
 
 ## **Notes Importantes pour Toutes les APIs**
-
-### **Activation de l'Environnement Virtuel**
-
-- **Windows :**
-
-  - Pour activer l'environnement virtuel, exécutez :
-
-    ```bash
-    venv\Scripts\activate
-    ```
-
-- **macOS/Linux :**
-
-  - Pour activer l'environnement virtuel, exécutez :
-
-    ```bash
-    source venv/bin/activate
-    ```
-
-- **Désactivation :**
-
-  - Pour désactiver l'environnement virtuel, exécutez :
-
-    ```bash
-    deactivate
-    ```
 
 ### **Fichiers `.env`**
 
