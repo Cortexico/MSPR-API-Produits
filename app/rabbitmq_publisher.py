@@ -44,7 +44,6 @@ async def connect_to_rabbitmq(retries=5, delay=2):
                 )
 
 
-
 async def send_message_to_rabbitmq(message):
     await connect_to_rabbitmq()
     exchange = await channel.get_exchange('product_exchange')
