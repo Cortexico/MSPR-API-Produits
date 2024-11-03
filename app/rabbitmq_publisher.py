@@ -1,6 +1,7 @@
 import os
 import json
 import aio_pika
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
