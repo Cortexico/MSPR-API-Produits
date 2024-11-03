@@ -14,6 +14,7 @@ RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
 connection = None
 channel = None
 
+
 async def connect_to_rabbitmq(retries=5, delay=2):
     global connection, channel
     for attempt in range(retries):
@@ -25,7 +26,10 @@ async def connect_to_rabbitmq(retries=5, delay=2):
                 password=RABBITMQ_PASSWORD
             )
             channel = await connection.channel()
-            await channel.declare_exchange('product_exchange', aio_pika.ExchangeType.FANOUT)
+            await channel.declare_exchange(
+                'product_exchange', 
+                aio_pika.ExchangeType.FANOUT
+            )
             print("Connexion à RabbitMQ établie avec succès.")
             break
         except Exception as e:
@@ -34,7 +38,10 @@ async def connect_to_rabbitmq(retries=5, delay=2):
                 print(f"Nouvelle tentative dans {delay} secondes...")
                 await asyncio.sleep(delay)
             else:
-                raise RuntimeError("Impossible de se connecter à RabbitMQ après plusieurs tentatives.")
+                raise RuntimeError(
+                    "Impossible de se connecter à RabbitMQ après plusieurs tentatives."
+                )
+
 
 async def send_message_to_rabbitmq(message):
     await connect_to_rabbitmq()

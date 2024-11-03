@@ -104,6 +104,7 @@ async def update_product(id: str, product: ProductUpdate):
 
     raise HTTPException(status_code=404, detail="Produit non trouvé")
 
+
 # DELETE /products/{id}
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(id: str):

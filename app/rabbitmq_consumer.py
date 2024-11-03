@@ -40,7 +40,11 @@
 #         password=RABBITMQ_PASSWORD
 #     )
 #     channel = await connection.channel()
-#     exchange = await channel.declare_exchange('product_updates', aio_pika.ExchangeType.FANOUT)
+#     exchange = await channel.declare_exchange(
+#         'product_updates',
+#         aio_pika.ExchangeType.FANOUT
+#     )
+
 #     queue = await channel.declare_queue('', exclusive=True)
 #     await queue.bind(exchange)
 
