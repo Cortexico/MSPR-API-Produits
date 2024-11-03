@@ -27,7 +27,7 @@ async def connect_to_rabbitmq(retries=5, delay=2):
             )
             channel = await connection.channel()
             await channel.declare_exchange(
-                'product_exchange', 
+                'product_exchange',
                 aio_pika.ExchangeType.FANOUT
             )
             print("Connexion à RabbitMQ établie avec succès.")
@@ -39,8 +39,10 @@ async def connect_to_rabbitmq(retries=5, delay=2):
                 await asyncio.sleep(delay)
             else:
                 raise RuntimeError(
-                    "Impossible de se connecter à RabbitMQ après plusieurs tentatives."
+                    "Impossible de se connecter à RabbitMQ après plusieurs "
+                    "tentatives."
                 )
+
 
 
 async def send_message_to_rabbitmq(message):

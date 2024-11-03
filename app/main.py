@@ -11,6 +11,7 @@ app = FastAPI()
 # Inclure le routeur pour les produits
 app.include_router(products.router)
 
+
 # démarrer l'application et initilaser la connexion rabbitmq
 @app.on_event("startup")
 async def startup_event():
