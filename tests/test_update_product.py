@@ -1,6 +1,7 @@
 import pytest
 
-def test_update_product(test_client, mongo_client):
+@pytest.mark.asyncio
+async def test_update_product(test_client, mongo_client):
     # Données initiales pour créer le produit
     product_data = {
         "name": "Test Product",
@@ -9,7 +10,7 @@ def test_update_product(test_client, mongo_client):
         "stock": 100
     }
     # Création du produit initial
-    create_response = test_client.post("/products/", json=product_data)
+    create_response = await test_client.post("/products/", json=product_data)
     assert create_response.status_code == 201
     product_id = create_response.json()["id"]
 
@@ -21,7 +22,7 @@ def test_update_product(test_client, mongo_client):
         "stock": 150
     }
     # Mise à jour du produit
-    response = test_client.put(f"/products/{product_id}", json=update_data)
+    response = await test_client.put(f"/products/{product_id}", json=update_data)
     assert response.status_code == 200  # Vérifie que la mise à jour a réussi
     data = response.json()
 

@@ -1,15 +1,16 @@
 import pytest
 
-def test_get_products(test_client, mongo_client):
+@pytest.mark.asyncio
+async def test_get_products(test_client, mongo_client):
     product_data = {
         "name": "Test Product",
         "description": "Test Description",
         "price": 29.99,
         "stock": 100
     }
-    test_client.post("/products/", json=product_data)
+    await test_client.post("/products/", json=product_data)
 
-    response = test_client.get("/products/")
+    response = await test_client.get("/products/")
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
