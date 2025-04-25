@@ -233,3 +233,22 @@ Le workflow CI/CD configure les variables d'environnement nécessaires pour les 
 4. **Surveillance et gestion des erreurs** :
    - Intégrez des outils de surveillance pour garder un œil sur les performances et les requêtes vers MongoDB, notamment pour éviter les surcharges.
    - Configurez la journalisation des événements critiques pour analyser les erreurs ou les anomalies dans le comportement de l’API Produits.
+
+
+## Déploiement Kubernetes
+
+Ce projet contient également les fichiers nécessaires pour déployer l'API Produits et sa base de données MongoDB dans un cluster Kubernetes.
+
+Les ressources créées sont :
+
+- **Deployment** pour l'API Produits (`api-products`)
+- **Service** de type `NodePort` pour exposer l'API (`api-products`)
+- **StatefulSet** pour la base MongoDB (`mongo-products`) avec stockage persistant
+- **Service** de type `Headless` (`mongo-products`) pour MongoDB
+
+### Commandes de déploiement
+
+Appliquer les ressources Kubernetes :
+```bash
+kubectl apply -f api-produits.yaml
+kubectl apply -f mongo-products-sts.yaml
