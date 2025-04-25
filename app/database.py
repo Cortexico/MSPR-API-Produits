@@ -14,7 +14,7 @@ MONGO_DB = os.getenv("MONGO_DB")
 # Construire la chaîne de connexion
 MONGO_DETAILS = (
     f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:"
-    f"{MONGO_PORT}/{MONGO_DB}"
+    f"{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 )
 
 
